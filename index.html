@@ -1,0 +1,1092 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EduManager - Demo quản lý lớp học</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<style>
+  [x-cloak]{display:none!important}
+  @media print{
+    body *{visibility:hidden}
+    #receipt,#receipt *{visibility:visible}
+    #receipt{position:absolute;left:0;top:0;width:100%;box-shadow:none!important}
+    .no-print{display:none!important}
+  }
+
+  /* ===== THEME TOKENS ===== */
+  body[data-theme="a"]{ /* A · Clean SaaS */
+    --bg:#f7f8fa; --surface:#fff; --surface2:#f3f4f6; --border:#e5e7eb; --text:#111827; --muted:#6b7280; --muted2:#9ca3af;
+    --brand:#0e7490; --brand-soft:#ecfeff; --brand-ring:#a5f3fc;
+    --radius:8px; --radius-sm:5px; --shadow:0 0 0 rgba(0,0,0,0); --font:'Inter',system-ui,sans-serif; --fs:14px; --h1:1.25rem; --h1w:600;
+    --hdr-bg:#fff; --hdr-text:#111827; --hdr-border:#e5e7eb; --seg-border:#e5e7eb; --seg-on-bg:#ecfeff; --seg-on-text:#0e7490; --sel-bg:#fff; --sel-text:#111827;
+    --logo-bg:#0e7490; --logo-fg:#fff;
+    --nav-bg:#fff; --nav-border:#e5e7eb; --nav-text:#4b5563; --nav-hover:#f3f4f6; --nav-active-bg:#ecfeff; --nav-active-text:#0e7490; --nav-on-shadow:none; --nav-radius:6px;
+    --cell-pad:.5rem .75rem; --th-upper:uppercase; --th-size:11px;
+  }
+  body[data-theme="b"]{ /* B · Dark Pro, mật độ cao */
+    --bg:#eceef2; --surface:#fff; --surface2:#f5f6f8; --border:#d9dde5; --text:#1f2937; --muted:#667085; --muted2:#98a2b3;
+    --brand:#16a34a; --brand-soft:#dcfce7; --brand-ring:#86efac;
+    --radius:4px; --radius-sm:3px; --shadow:0 1px 0 rgba(15,23,42,.05); --font:'Inter',system-ui,sans-serif; --fs:13px; --h1:1.1rem; --h1w:600;
+    --hdr-bg:#0b1220; --hdr-text:#e5e7eb; --hdr-border:#1f2937; --seg-border:#334155; --seg-on-bg:#16a34a; --seg-on-text:#fff; --sel-bg:#1e293b; --sel-text:#e5e7eb;
+    --logo-bg:#16a34a; --logo-fg:#fff;
+    --nav-bg:#0f172a; --nav-border:#1e293b; --nav-text:#94a3b8; --nav-hover:#1e293b; --nav-active-bg:#1e293b; --nav-active-text:#fff; --nav-on-shadow:inset 2px 0 0 #16a34a; --nav-radius:3px;
+    --cell-pad:.3rem .6rem; --th-upper:uppercase; --th-size:10.5px;
+  }
+  body[data-theme="c"]{ /* C · Thân thiện, ấm */
+    --bg:#fffaf3; --surface:#fff; --surface2:#fff3e3; --border:#f1e3d0; --text:#3b2f2f; --muted:#8a7a6a; --muted2:#b5a595;
+    --brand:#ea580c; --brand-soft:#ffedd5; --brand-ring:#fdba74;
+    --radius:16px; --radius-sm:10px; --shadow:0 2px 12px rgba(234,88,12,.08); --font:'Be Vietnam Pro',system-ui,sans-serif; --fs:14px; --h1:1.45rem; --h1w:700;
+    --hdr-bg:linear-gradient(90deg,#f97316,#f59e0b); --hdr-text:#fff; --hdr-border:transparent; --seg-border:rgba(255,255,255,.55); --seg-on-bg:#fff; --seg-on-text:#c2410c; --sel-bg:rgba(255,255,255,.22); --sel-text:#fff;
+    --logo-bg:#fff; --logo-fg:#ea580c;
+    --nav-bg:#fff8ee; --nav-border:#f1e3d0; --nav-text:#7c5e45; --nav-hover:#ffedd5; --nav-active-bg:#ffedd5; --nav-active-text:#c2410c; --nav-on-shadow:none; --nav-radius:999px;
+    --cell-pad:.6rem .75rem; --th-upper:none; --th-size:12px;
+  }
+
+  /* ===== CHROME ===== */
+  body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:var(--fs);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+  .hdr{background:var(--hdr-bg);color:var(--hdr-text);border-bottom:1px solid var(--hdr-border)}
+  .logo{background:var(--logo-bg);color:var(--logo-fg)}
+  .seg{display:flex;border:1px solid var(--seg-border);border-radius:var(--radius-sm);overflow:hidden;font-size:12px}
+  .seg button{padding:.25rem .65rem;opacity:.85}
+  .seg button.on{background:var(--seg-on-bg);color:var(--seg-on-text);font-weight:600;opacity:1}
+  .hdr-select{background:var(--sel-bg);color:var(--sel-text);border:1px solid var(--seg-border);border-radius:var(--radius-sm);padding:.25rem .5rem;font-size:12px}
+  .hdr-select option{color:#111;background:#fff}
+  .hdr-link{font-size:12px;opacity:.7;text-decoration:underline}
+  .app-nav{background:var(--nav-bg);border-color:var(--nav-border)!important}
+  .nav-item{color:var(--nav-text);border-radius:var(--nav-radius);transition:background .15s}
+  .nav-item:hover{background:var(--nav-hover)}
+  .nav-item.on{background:var(--nav-active-bg);color:var(--nav-active-text);font-weight:600;box-shadow:var(--nav-on-shadow)}
+
+  /* ===== REMAP TAILWIND MẶC ĐỊNH → TOKEN ===== */
+  body *{border-color:var(--border)}
+  body .bg-white{background:var(--surface)}
+  body .bg-slate-50,body .bg-slate-100{background:var(--surface2)}
+  body .bg-slate-200{background:var(--border)}
+  body .text-slate-500,body .text-slate-600{color:var(--muted)}
+  body .text-slate-400,body .text-slate-300{color:var(--muted2)}
+  body .shadow-sm{box-shadow:var(--shadow)}
+  body .rounded-lg,body .rounded-xl{border-radius:var(--radius)}
+  body .rounded{border-radius:var(--radius-sm)}
+  body .bg-indigo-600{background:var(--brand);color:#fff}
+  body .bg-indigo-50,body .bg-indigo-100{background:var(--brand-soft)}
+  body .text-indigo-600,body .text-indigo-700,body .text-indigo-800{color:var(--brand)}
+  body .border-indigo-600{border-color:var(--brand)}
+  body .ring-indigo-200,body .ring-indigo-500{--tw-ring-color:var(--brand-ring)}
+  body h1.text-lg{font-size:var(--h1);font-weight:var(--h1w);letter-spacing:-.01em}
+  body thead th{font-weight:600;letter-spacing:.03em;text-transform:var(--th-upper);font-size:var(--th-size)}
+  body td,body th{padding:var(--cell-pad)}
+  body tbody tr:hover{background:var(--surface2)}
+  body input,body select{background:var(--surface);color:var(--text)}
+  body input:focus,body select:focus{outline:2px solid var(--brand-ring);outline-offset:0}
+  body button{transition:background .12s,border-color .12s}
+</style>
+</head>
+<body data-theme="a" :data-theme="theme" x-data="app()" x-cloak>
+
+<!-- HEADER -->
+<header class="hdr no-print sticky top-0 z-30 px-3 py-2 flex flex-wrap items-center gap-2">
+  <div class="flex items-center gap-2 mr-auto min-w-0">
+    <span class="logo w-7 h-7 rounded-md flex items-center justify-center shrink-0"><svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" x-html="ICONS.cap"></svg></span>
+    <span class="font-bold text-base">EduManager</span>
+    <span class="text-xs opacity-60 hidden sm:inline" x-text="mode==='center'?'· Trung tâm Ánh Dương':'· Lớp Toán cô Lan'"></span>
+  </div>
+  <div class="flex items-center gap-1 text-xs"><span class="opacity-60 hidden md:inline">Giao diện</span>
+    <div class="seg">
+      <template x-for="t in THEMES" :key="t.id"><button :class="theme===t.id?'on':''" @click="setTheme(t.id)" x-text="t.label"></button></template>
+    </div>
+  </div>
+  <div class="seg">
+    <button :class="mode==='center'?'on':''" @click="setMode('center')">Trung tâm</button>
+    <button :class="mode==='solo'?'on':''" @click="setMode('solo')">GV cá nhân</button>
+  </div>
+  <select x-show="mode==='center'" x-model="role" @change="go('dashboard')" class="hdr-select">
+    <option value="admin">Vai trò: Admin</option>
+    <template x-for="t in data.teachers" :key="t.id"><option :value="t.id" x-text="'GV: '+t.name"></option></template>
+  </select>
+  <button class="hdr-link" @click="reset()">Reset dữ liệu</button>
+</header>
+
+<div class="md:flex">
+  <!-- NAV -->
+  <nav class="app-nav no-print fixed bottom-0 inset-x-0 z-20 border-t flex overflow-x-auto md:static md:w-56 md:min-h-screen md:flex-col md:border-t-0 md:border-r md:p-3 md:gap-1">
+    <template x-for="m in menu()" :key="m.id">
+      <button @click="go(m.id)" class="nav-item flex-1 md:flex-none flex md:flex-row flex-col items-center gap-1 md:gap-2.5 px-3 py-2 whitespace-nowrap text-xs md:text-[13px]"
+        :class="view===m.id||(view==='classDetail'&&m.id==='classes')?'on':''">
+        <svg class="w-5 h-5 md:w-[18px] md:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" x-html="ICONS[m.icon]"></svg><span x-text="m.label"></span>
+      </button>
+    </template>
+  </nav>
+
+  <main class="flex-1 p-3 md:p-5 pb-24 md:pb-5 max-w-5xl">
+
+    <!-- DASHBOARD -->
+    <section x-show="view==='dashboard'">
+      <h1 class="text-lg font-bold mb-3">Tổng quan <span class="text-slate-400 font-normal text-sm" x-text="'· hôm nay '+fmtDate(today)"></span></h1>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div class="bg-white rounded-lg p-3 shadow-sm"><div class="text-slate-500 text-xs">Học sinh</div><div class="text-2xl font-bold" x-text="data.students.length"></div></div>
+        <div class="bg-white rounded-lg p-3 shadow-sm"><div class="text-slate-500 text-xs">Lớp đang dạy</div><div class="text-2xl font-bold" x-text="myClasses().length"></div></div>
+        <div class="bg-white rounded-lg p-3 shadow-sm" x-show="canFees()"><div class="text-slate-500 text-xs">Đã thu tháng này</div><div class="text-xl font-bold text-emerald-600" x-text="vnd(feeTotals(thisMonth).paid)"></div></div>
+        <div class="bg-white rounded-lg p-3 shadow-sm" x-show="canFees()"><div class="text-slate-500 text-xs">Còn nợ tháng này</div><div class="text-xl font-bold text-rose-600" x-text="vnd(feeTotals(thisMonth).debt)"></div></div>
+      </div>
+
+      <!-- LỊCH THÁNG -->
+      <div class="bg-white rounded-lg shadow-sm p-3 mb-4">
+        <div class="flex items-center gap-2 mb-3">
+          <button class="border rounded-full w-8 h-8" @click="calNav(-1)">‹</button>
+          <h2 class="font-semibold flex-1 text-center" x-text="'Lịch dạy · '+calTitle()"></h2>
+          <button class="border rounded-full w-8 h-8" @click="calNav(1)">›</button>
+          <button class="text-xs border rounded px-2 py-1.5" @click="calToday()">Hôm nay</button>
+        </div>
+        <div class="grid grid-cols-7 text-center text-xs text-slate-500 mb-1">
+          <template x-for="d in ['T2','T3','T4','T5','T6','T7','CN']" :key="d"><div x-text="d"></div></template>
+        </div>
+        <div class="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded overflow-hidden">
+          <template x-for="cell in calCells()" :key="cell.date">
+            <button class="min-h-14 md:min-h-24 p-1 text-left flex flex-col items-stretch"
+              :class="[cell.inMonth?'bg-white':'bg-slate-50 text-slate-300', calDay===cell.date?'ring-2 ring-inset ring-indigo-500':'']" @click="calDay=cell.date">
+              <span class="text-xs w-5 h-5 inline-flex items-center justify-center rounded-full" :class="cell.date===today?'bg-indigo-600 text-white':''" x-text="+cell.date.slice(8)"></span>
+              <div class="mt-1 space-y-0.5">
+                <template x-for="it in cell.items.slice(0,3)" :key="it.key">
+                  <div class="hidden md:block truncate rounded px-1 text-[10px] leading-4" :class="itemCls(it)" x-text="it.time.slice(0,5)+' '+it.label"></div>
+                </template>
+                <div class="hidden md:block text-[10px] text-slate-400" x-show="cell.items.length>3" x-text="'+'+(cell.items.length-3)+' nữa'"></div>
+                <div class="md:hidden flex flex-wrap gap-0.5">
+                  <template x-for="it in cell.items" :key="it.key"><span class="w-1.5 h-1.5 rounded-full" :class="itemDot(it)"></span></template>
+                </div>
+              </div>
+            </button>
+          </template>
+        </div>
+        <div class="flex flex-wrap gap-3 text-xs text-slate-500 mt-2">
+          <span><span class="inline-block w-2 h-2 rounded-full bg-indigo-500 mr-1"></span>Buổi học (màu theo lớp)</span>
+          <span><span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></span>Học bù</span>
+          <span><span class="inline-block w-2 h-2 rounded-full bg-rose-500 mr-1"></span>Kiểm tra</span>
+          <span><span class="inline-block w-2 h-2 rounded-full bg-slate-300 mr-1"></span>Nghỉ</span>
+        </div>
+      </div>
+
+      <!-- CHI TIẾT NGÀY -->
+      <div class="grid md:grid-cols-2 gap-3">
+        <div class="bg-white rounded-lg shadow-sm p-3">
+          <div class="flex items-center mb-2">
+            <h2 class="font-semibold mr-auto" x-text="wd(calDay)+', '+fmtDate(calDay)"></h2>
+            <button class="text-xs bg-indigo-600 text-white rounded px-2 py-1" @click="openForm('events')">+ Sự kiện</button>
+          </div>
+          <template x-for="it in dayItems(calDay)" :key="it.key">
+            <div class="flex items-center gap-2 border-t py-2">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="itemDot(it)"></span>
+              <div class="flex-1 min-w-0">
+                <div class="font-medium truncate" :class="it.kind==='off'?'line-through text-slate-400':''" x-text="it.label"></div>
+                <div class="text-xs text-slate-500" x-text="it.time+' · '+(it.c.room||'—')+(mode==='center'?' · '+name('teachers',it.c.teacher_id):'')+(it.ev&&it.ev.note?' · '+it.ev.note:'')"></div>
+              </div>
+              <span class="text-xs text-emerald-600" x-show="it.kind!=='off'&&hasSession(it.c.id,calDay)">✓ đã điểm danh</span>
+              <button class="text-xs bg-indigo-50 text-indigo-700 rounded px-2 py-1" x-show="it.kind==='class'||it.kind==='makeup'" @click="openAtt(it.c.id,calDay)">Điểm danh</button>
+              <button class="text-xs text-slate-500 underline" x-show="it.kind==='class'" @click="toggleOff(it)">Nghỉ</button>
+              <button class="text-xs text-slate-500 underline" x-show="it.kind==='off'" @click="toggleOff(it)">Bỏ nghỉ</button>
+              <button class="text-xs text-rose-600" x-show="it.kind==='makeup'||it.kind==='exam'" @click="del('events',it.ev.id)">Xóa</button>
+            </div>
+          </template>
+          <div x-show="!dayItems(calDay).length" class="text-slate-400 py-6 text-center">Không có lịch trong ngày này.</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm p-3">
+          <h2 class="font-semibold mb-2">Vắng nhiều (30 ngày qua)</h2>
+          <template x-for="r in frequentAbsent()" :key="r.st.id">
+            <div class="flex justify-between border-t py-2">
+              <div><span class="font-medium" x-text="r.st.name"></span><div class="text-xs text-slate-500" x-text="'PH: '+r.st.parent_name+' · '+r.st.parent_phone"></div></div>
+              <span class="text-rose-600 font-semibold" x-text="r.n+' buổi'"></span>
+            </div>
+          </template>
+          <div x-show="!frequentAbsent().length" class="text-slate-400 py-6 text-center">Không có học sinh nào.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STUDENTS -->
+    <section x-show="view==='students'">
+      <div class="flex items-center gap-2 mb-3">
+        <h1 class="text-lg font-bold mr-auto">Học sinh <span class="text-slate-400 text-sm" x-text="'('+filteredStudents().length+')'"></span></h1>
+        <input x-model="q" placeholder="Tìm tên / SĐT..." class="border rounded px-2 py-1 w-40 md:w-60">
+        <button class="bg-indigo-600 text-white rounded px-3 py-1" @click="openForm('students')">+ Thêm</button>
+      </div>
+      <div class="bg-white rounded shadow-sm overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="p-2">Họ tên</th><th class="p-2">Ngày sinh</th><th class="p-2">Phụ huynh</th><th class="p-2">Lớp</th><th class="p-2"></th></tr></thead>
+          <tbody>
+            <template x-for="s in filteredStudents()" :key="s.id">
+              <tr class="border-t">
+                <td class="p-2 font-medium" x-text="s.name"></td>
+                <td class="p-2" x-text="fmtDate(s.dob)"></td>
+                <td class="p-2"><div x-text="s.parent_name"></div><div class="text-xs text-slate-500" x-text="s.parent_phone"></div></td>
+                <td class="p-2"><template x-for="c in studentClasses(s.id)" :key="c.id"><span class="inline-block bg-indigo-50 text-indigo-700 rounded px-1.5 mr-1 text-xs" x-text="c.name"></span></template></td>
+                <td class="p-2 text-right whitespace-nowrap">
+                  <button class="text-indigo-600 mr-2" @click="openForm('students',s)">Sửa</button>
+                  <button class="text-rose-600" @click="del('students',s.id)">Xóa</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <div x-show="!filteredStudents().length" class="p-6 text-center text-slate-400">Không có dữ liệu.</div>
+      </div>
+    </section>
+
+    <!-- CLASSES -->
+    <section x-show="view==='classes'">
+      <div class="flex items-center gap-2 mb-3">
+        <h1 class="text-lg font-bold mr-auto">Lớp học</h1>
+        <button class="bg-indigo-600 text-white rounded px-3 py-1" @click="openForm('classes')">+ Thêm lớp</button>
+      </div>
+      <div class="bg-white rounded shadow-sm overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-slate-50 text-xs text-slate-500"><tr>
+            <th class="p-2">Lớp</th><th class="p-2" x-show="mode==='center'">Môn</th><th class="p-2" x-show="mode==='center'">Giáo viên</th>
+            <th class="p-2">Lịch</th><th class="p-2">Học phí</th><th class="p-2">Sĩ số</th><th class="p-2"></th></tr></thead>
+          <tbody>
+            <template x-for="c in myClasses()" :key="c.id">
+              <tr class="border-t">
+                <td class="p-2 font-medium" x-text="c.name"></td>
+                <td class="p-2" x-show="mode==='center'" x-text="name('subjects',c.subject_id)"></td>
+                <td class="p-2" x-show="mode==='center'" x-text="name('teachers',c.teacher_id)"></td>
+                <td class="p-2"><div x-text="schedule(c)"></div><div class="text-xs text-slate-500" x-text="c.room"></div></td>
+                <td class="p-2" x-text="vnd(c.fee)"></td>
+                <td class="p-2" x-text="enrolled(c.id).length"></td>
+                <td class="p-2 text-right whitespace-nowrap">
+                  <button class="text-emerald-600 mr-2" @click="classId=c.id;view='classDetail'">Học sinh</button>
+                  <button class="text-indigo-600 mr-2" @click="openForm('classes',c)">Sửa</button>
+                  <button class="text-rose-600" @click="del('classes',c.id)">Xóa</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+        <div x-show="!myClasses().length" class="p-6 text-center text-slate-400">Chưa có lớp.</div>
+      </div>
+    </section>
+
+    <!-- CLASS DETAIL -->
+    <section x-show="view==='classDetail'">
+      <template x-if="by('classes',classId)">
+        <div>
+          <button class="text-indigo-600 mb-2" @click="view='classes'">← Danh sách lớp</button>
+          <h1 class="text-lg font-bold" x-text="by('classes',classId).name"></h1>
+          <p class="text-slate-500 mb-3" x-text="schedule(by('classes',classId))+' · '+vnd(by('classes',classId).fee)+'/tháng'"></p>
+          <div class="bg-white rounded shadow-sm p-3 mb-3 flex gap-2">
+            <select x-model="addStudent" class="border rounded px-2 py-1 flex-1">
+              <option value="">— Chọn học sinh để thêm vào lớp —</option>
+              <template x-for="s in notEnrolled(classId)" :key="s.id"><option :value="s.id" x-text="s.name"></option></template>
+            </select>
+            <button class="bg-indigo-600 text-white rounded px-3 py-1" @click="enroll()">Thêm</button>
+          </div>
+          <div class="bg-white rounded shadow-sm">
+            <template x-for="s in enrolled(classId)" :key="s.id">
+              <div class="flex items-center justify-between px-3 py-2 border-b last:border-0">
+                <div><span class="font-medium" x-text="s.name"></span><span class="text-xs text-slate-500 ml-2" x-text="s.parent_phone"></span></div>
+                <button class="text-rose-600 text-xs" @click="unenroll(s.id)">Rút khỏi lớp</button>
+              </div>
+            </template>
+            <div x-show="!enrolled(classId).length" class="p-6 text-center text-slate-400">Lớp chưa có học sinh.</div>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- TEACHERS -->
+    <section x-show="view==='teachers'">
+      <div class="flex items-center gap-2 mb-3">
+        <h1 class="text-lg font-bold mr-auto">Giáo viên</h1>
+        <button class="bg-indigo-600 text-white rounded px-3 py-1" @click="openForm('teachers')">+ Thêm</button>
+      </div>
+      <div class="bg-white rounded shadow-sm overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="p-2">Họ tên</th><th class="p-2">SĐT</th><th class="p-2">Email</th><th class="p-2">Số lớp</th><th class="p-2"></th></tr></thead>
+          <tbody>
+            <template x-for="t in data.teachers" :key="t.id">
+              <tr class="border-t">
+                <td class="p-2 font-medium" x-text="t.name"></td><td class="p-2" x-text="t.phone"></td><td class="p-2" x-text="t.email"></td>
+                <td class="p-2" x-text="data.classes.filter(c=>c.teacher_id===t.id).length"></td>
+                <td class="p-2 text-right whitespace-nowrap">
+                  <button class="text-indigo-600 mr-2" @click="openForm('teachers',t)">Sửa</button>
+                  <button class="text-rose-600" @click="del('teachers',t.id)">Xóa</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SUBJECTS -->
+    <section x-show="view==='subjects'">
+      <div class="flex items-center gap-2 mb-3">
+        <h1 class="text-lg font-bold mr-auto">Môn học</h1>
+        <button class="bg-indigo-600 text-white rounded px-3 py-1" @click="openForm('subjects')">+ Thêm</button>
+      </div>
+      <div class="bg-white rounded shadow-sm">
+        <template x-for="s in data.subjects" :key="s.id">
+          <div class="flex items-center justify-between px-3 py-2 border-b last:border-0">
+            <div><span class="font-medium" x-text="s.name"></span><span class="text-xs text-slate-500 ml-2" x-text="data.classes.filter(c=>c.subject_id===s.id).length+' lớp'"></span></div>
+            <div><button class="text-indigo-600 mr-2" @click="openForm('subjects',s)">Sửa</button><button class="text-rose-600" @click="del('subjects',s.id)">Xóa</button></div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- ATTENDANCE -->
+    <section x-show="view==='attendance'">
+      <h1 class="text-lg font-bold mb-1">Điểm danh</h1>
+      <p class="text-slate-500 mb-3">Chọn lớp để điểm danh hoặc xem lại lịch sử.</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+        <template x-for="c in myClasses()" :key="c.id">
+          <button class="text-left rounded-lg border bg-white p-3 shadow-sm hover:border-indigo-400 transition" :class="attClass===c.id?'border-indigo-600 ring-2 ring-indigo-200':''" @click="pickAttClass(c.id)">
+            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full" :class="color(c).dot"></span><span class="font-semibold" x-text="c.name"></span></div>
+            <div class="text-xs text-slate-500 mt-1" x-text="schedule(c)"></div>
+            <div class="text-xs text-slate-400" x-text="enrolled(c.id).length+' học sinh'"></div>
+          </button>
+        </template>
+      </div>
+
+      <div x-show="!attClass" class="bg-white rounded-lg shadow-sm p-10 text-center text-slate-400">
+        <div class="text-3xl mb-2">👆</div>Hãy chọn lớp
+      </div>
+
+      <template x-if="attClass">
+        <div>
+          <div class="flex gap-1 mb-3 border-b">
+            <button class="px-4 py-2 -mb-px border-b-2" :class="attTab==='mark'?'border-indigo-600 text-indigo-700 font-semibold':'border-transparent text-slate-500'" @click="attTab='mark'">Điểm danh</button>
+            <button class="px-4 py-2 -mb-px border-b-2" :class="attTab==='history'?'border-indigo-600 text-indigo-700 font-semibold':'border-transparent text-slate-500'" @click="attTab='history'">Lịch sử</button>
+          </div>
+
+          <!-- MARK -->
+          <div x-show="attTab==='mark'">
+            <div class="bg-white rounded-lg shadow-sm p-3 mb-3 flex flex-wrap items-center gap-2">
+              <button class="border rounded-full w-8 h-8" @click="shiftAttDay(-1)">‹</button>
+              <input type="date" x-model="attDate" @change="loadAtt()" class="border rounded px-2 py-1">
+              <button class="border rounded-full w-8 h-8" @click="shiftAttDay(1)">›</button>
+              <button class="text-xs border rounded px-2 py-1.5" @click="attDate=today;loadAtt()">Hôm nay</button>
+              <span class="font-medium" x-text="wd(attDate)"></span>
+              <span class="ml-auto text-xs rounded px-2 py-1" :class="findSession()?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-500'" x-text="findSession()?'✓ Đã điểm danh':'Chưa điểm danh'"></span>
+              <div class="w-full text-xs text-amber-600" x-show="!by('classes',attClass)?.days.includes(new Date(attDate+'T00:00:00').getDay())">⚠ Ngày này không nằm trong lịch học của lớp.</div>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm">
+              <template x-for="s in enrolled(attClass)" :key="s.id">
+                <div class="flex items-center gap-3 px-3 py-2 border-b last:border-0">
+                  <span class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold shrink-0" x-text="initial(s.name)"></span>
+                  <span class="font-medium flex-1" x-text="s.name"></span>
+                  <div class="flex gap-1 text-xs shrink-0">
+                    <button class="px-2.5 py-1.5 rounded-full border" :class="att[s.id]==='present'?'bg-emerald-600 text-white border-emerald-600':'text-slate-500'" @click="att[s.id]='present'">Có mặt</button>
+                    <button class="px-2.5 py-1.5 rounded-full border" :class="att[s.id]==='excused'?'bg-amber-500 text-white border-amber-500':'text-slate-500'" @click="att[s.id]='excused'">Phép</button>
+                    <button class="px-2.5 py-1.5 rounded-full border" :class="att[s.id]==='absent'?'bg-rose-600 text-white border-rose-600':'text-slate-500'" @click="att[s.id]='absent'">Vắng</button>
+                  </div>
+                </div>
+              </template>
+              <div x-show="!enrolled(attClass).length" class="p-6 text-center text-slate-400">Lớp chưa có học sinh.</div>
+            </div>
+            <div class="sticky bottom-16 md:bottom-3 z-10 mt-3 bg-white rounded-lg shadow-lg border p-2 flex flex-wrap items-center gap-2" x-show="enrolled(attClass).length">
+              <span class="text-xs text-slate-600 mr-auto" x-text="'Có mặt '+Object.values(att).filter(v=>v==='present').length+' · Phép '+Object.values(att).filter(v=>v==='excused').length+' · Vắng '+Object.values(att).filter(v=>v==='absent').length"></span>
+              <button class="border rounded px-3 py-1.5" @click="enrolled(attClass).forEach(s=>att[s.id]='present')">Tất cả có mặt</button>
+              <button class="bg-indigo-600 text-white rounded px-4 py-1.5" @click="saveAtt()">Lưu điểm danh</button>
+            </div>
+          </div>
+
+          <!-- HISTORY -->
+          <div x-show="attTab==='history'">
+            <h2 class="font-semibold mb-2">Chuyên cần theo học sinh</h2>
+            <div class="bg-white rounded-lg shadow-sm overflow-x-auto mb-4">
+              <table class="w-full text-left">
+                <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="p-2">Học sinh</th><th class="p-2">Có mặt</th><th class="p-2">Phép</th><th class="p-2">Vắng</th><th class="p-2">Chuyên cần</th></tr></thead>
+                <tbody>
+                  <template x-for="r in attStudentStats()" :key="r.st.id">
+                    <tr class="border-t">
+                      <td class="p-2 font-medium" x-text="r.st.name"></td>
+                      <td class="p-2" x-text="r.present"></td><td class="p-2" x-text="r.excused"></td>
+                      <td class="p-2" :class="r.absent>=3?'text-rose-600 font-semibold':''" x-text="r.absent"></td>
+                      <td class="p-2 w-40">
+                        <div class="flex items-center gap-2"><div class="h-1.5 flex-1 bg-slate-200 rounded"><div class="h-1.5 rounded" :class="r.rate>=80?'bg-emerald-500':'bg-rose-500'" :style="'width:'+(r.rate||0)+'%'"></div></div><span class="text-xs w-9" x-text="r.rate===null?'—':r.rate+'%'"></span></div>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <h2 class="font-semibold mb-2">Các buổi đã điểm danh</h2>
+            <div class="space-y-2">
+              <template x-for="h in attHistory()" :key="h.s.id">
+                <div class="bg-white rounded-lg shadow-sm p-3 flex flex-wrap items-center gap-2">
+                  <div class="w-28"><div class="font-semibold" x-text="fmtDate(h.s.date)"></div><div class="text-xs text-slate-500" x-text="wd(h.s.date)"></div></div>
+                  <span class="text-xs rounded-full px-2 py-0.5 bg-emerald-100 text-emerald-700" x-text="h.present+' có mặt'"></span>
+                  <span class="text-xs rounded-full px-2 py-0.5 bg-amber-100 text-amber-700" x-show="h.excused" x-text="h.excused+' phép'"></span>
+                  <span class="text-xs rounded-full px-2 py-0.5 bg-rose-100 text-rose-700" x-show="h.absent" x-text="h.absent+' vắng'"></span>
+                  <span class="text-xs text-slate-500 flex-1 min-w-32" x-show="h.absentNames.length" x-text="'Vắng: '+h.absentNames.join(', ')"></span>
+                  <button class="text-xs text-indigo-600 ml-auto" @click="attDate=h.s.date;attTab='mark';loadAtt()">Xem / sửa</button>
+                </div>
+              </template>
+              <div x-show="!attHistory().length" class="bg-white rounded-lg shadow-sm p-8 text-center text-slate-400">Lớp chưa có buổi điểm danh nào.</div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- GRADES -->
+    <section x-show="view==='grades'">
+      <h1 class="text-lg font-bold mb-1">Điểm số &amp; nhận xét</h1>
+      <p class="text-slate-500 mb-3">Chọn lớp để xem bảng điểm hoặc nhập điểm cho từng bài kiểm tra.</p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-4">
+        <template x-for="c in myClasses()" :key="c.id">
+          <button class="text-left rounded-lg border bg-white p-3 shadow-sm hover:border-indigo-400 transition" :class="gradeClass===c.id?'border-indigo-600 ring-2 ring-indigo-200':''" @click="pickGradeClass(c.id)">
+            <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full" :class="color(c).dot"></span><span class="font-semibold" x-text="c.name"></span></div>
+            <div class="text-xs text-slate-500 mt-1" x-text="enrolled(c.id).length+' học sinh · '+data.exams.filter(e=>e.class_id===c.id).length+' bài kiểm tra'"></div>
+          </button>
+        </template>
+      </div>
+
+      <div x-show="!gradeClass" class="bg-white rounded-lg shadow-sm p-10 text-center text-slate-400">
+        <div class="text-3xl mb-2">👆</div>Hãy chọn lớp
+      </div>
+
+      <template x-if="gradeClass">
+        <div>
+          <div class="flex items-center gap-1 mb-3 border-b">
+            <button class="px-4 py-2 -mb-px border-b-2" :class="gradeTab==='matrix'?'border-indigo-600 text-indigo-700 font-semibold':'border-transparent text-slate-500'" @click="gradeTab='matrix'">Bảng điểm</button>
+            <button class="px-4 py-2 -mb-px border-b-2" :class="gradeTab==='enter'?'border-indigo-600 text-indigo-700 font-semibold':'border-transparent text-slate-500'" @click="gradeTab='enter'">Nhập điểm theo bài</button>
+            <button class="ml-auto mb-1 bg-indigo-600 text-white rounded px-3 py-1" @click="openForm('exams')">+ Bài kiểm tra</button>
+          </div>
+
+          <!-- MATRIX -->
+          <div x-show="gradeTab==='matrix'">
+            <div class="bg-white rounded-lg shadow-sm overflow-x-auto" x-show="classExams().length">
+              <table class="text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th class="p-2 sticky left-0 bg-slate-50 z-10 min-w-40">Học sinh</th>
+                    <th class="p-2 text-center">TB</th>
+                    <template x-for="(e,i) in classExams()" :key="e.id">
+                      <th class="p-1 text-center cursor-pointer hover:bg-indigo-50 min-w-12" :title="e.name+' · '+fmtDate(e.date)" @click="enterExam(e.id)">
+                        <div class="font-semibold" x-text="'#'+(i+1)"></div><div class="font-normal text-[10px]" x-text="e.date.slice(8)+'/'+e.date.slice(5,7)"></div>
+                      </th>
+                    </template>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="row in gradeMatrix()" :key="row.st.id">
+                    <tr class="border-t">
+                      <td class="p-2 sticky left-0 bg-white z-10 font-medium text-sm cursor-pointer hover:text-indigo-600" @click="gradeStudent=row.st.id" x-text="row.st.name"></td>
+                      <td class="p-2 text-center"><span class="rounded px-1.5 py-0.5 font-semibold" :class="scoreCls(row.avg,10)" x-text="row.avg===null?'—':row.avg.toFixed(1)"></span></td>
+                      <template x-for="cell in row.cells" :key="cell.e.id">
+                        <td class="p-1 text-center cursor-pointer" :title="cell.r?.comment" @click="enterExam(cell.e.id)">
+                          <span class="inline-block min-w-8 rounded px-1 py-0.5" :class="scoreCls(cell.r?.score,cell.e.max)" x-text="cell.r&&cell.r.score!==''?cell.r.score:'·'"></span>
+                          <span class="block text-[9px] leading-3" x-show="cell.r&&cell.r.comment">💬</span>
+                        </td>
+                      </template>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <p class="text-xs text-slate-400 mt-2" x-show="classExams().length">Bấm tên học sinh để xem chi tiết điểm và nhận xét; bấm số bài hoặc ô điểm để nhập/sửa điểm bài đó. Màu: xanh ≥ 8, đỏ &lt; 5.</p>
+            <div x-show="!classExams().length" class="bg-white rounded-lg shadow-sm p-8 text-center text-slate-400">Lớp chưa có bài kiểm tra. Bấm "+ Bài kiểm tra".</div>
+          </div>
+
+          <!-- ENTER -->
+          <div x-show="gradeTab==='enter'">
+            <div class="flex gap-2 overflow-x-auto pb-2 mb-2">
+              <template x-for="e in classExams().slice().reverse()" :key="e.id">
+                <button class="shrink-0 rounded-lg border px-3 py-2 text-left bg-white" :class="gradeExam===e.id?'border-indigo-600 ring-2 ring-indigo-200':''" @click="gradeExam=e.id;loadScores()">
+                  <div class="font-semibold text-xs" x-text="'#'+examNo(e.id)+' · '+e.date.slice(8)+'/'+e.date.slice(5,7)"></div>
+                  <div class="text-xs text-slate-500 max-w-32 truncate" x-text="e.name"></div>
+                </button>
+              </template>
+            </div>
+            <div x-show="!gradeExam" class="bg-white rounded-lg shadow-sm p-8 text-center text-slate-400">Hãy chọn bài kiểm tra ở trên</div>
+            <template x-if="by('exams',gradeExam)">
+              <div>
+                <div class="bg-white rounded-lg shadow-sm">
+                  <div class="flex justify-between items-center px-3 py-2 border-b bg-slate-50 text-xs text-slate-500">
+                    <span x-text="by('exams',gradeExam).name+' · '+fmtDate(by('exams',gradeExam).date)+' · thang điểm '+by('exams',gradeExam).max"></span>
+                    <span><button class="text-indigo-600 mr-2" @click="openForm('exams',by('exams',gradeExam))">Sửa</button><button class="text-rose-600" @click="del('exams',gradeExam)">Xóa</button></span>
+                  </div>
+                  <template x-for="s in enrolled(gradeClass)" :key="s.id">
+                    <div class="flex flex-wrap items-center gap-2 px-3 py-2 border-b last:border-0" x-show="sc[s.id]">
+                      <span class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold text-xs shrink-0" x-text="initial(s.name)"></span>
+                      <span class="font-medium w-40" x-text="s.name"></span>
+                      <input type="number" step="0.25" min="0" :max="by('exams',gradeExam).max" placeholder="Điểm" x-model.number="sc[s.id].score" class="border rounded px-2 py-1 w-20 text-center">
+                      <input placeholder="Nhận xét..." x-model="sc[s.id].comment" class="border rounded px-2 py-1 flex-1 min-w-48">
+                    </div>
+                  </template>
+                </div>
+                <div class="sticky bottom-16 md:bottom-3 z-10 mt-3 bg-white rounded-lg shadow-lg border p-2 flex justify-end">
+                  <button class="bg-indigo-600 text-white rounded px-4 py-1.5" @click="saveScores()">Lưu điểm &amp; nhận xét</button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- FEES -->
+    <section x-show="view==='fees'">
+      <div class="flex items-center mb-3">
+        <h1 class="text-lg font-bold mr-auto">Học phí</h1>
+        <button class="border rounded px-2 py-1 bg-white text-xs" @click="settingsOpen=true">⚙ Tài khoản nhận tiền</button>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-sm p-4 mb-3">
+        <div class="flex items-center justify-between mb-3">
+          <button class="border rounded-full w-8 h-8" @click="feeMonth=shiftMonth(feeMonth,-1)">‹</button>
+          <div class="font-semibold" x-text="'Tháng '+feeMonth.slice(5)+'/'+feeMonth.slice(0,4)"></div>
+          <button class="border rounded-full w-8 h-8" @click="feeMonth=shiftMonth(feeMonth,1)">›</button>
+        </div>
+        <div class="grid grid-cols-3 text-center mb-3">
+          <div><div class="text-xs text-slate-500">Phải thu</div><div class="font-bold" x-text="vnd(feeTotals(feeMonth).total)"></div></div>
+          <div><div class="text-xs text-slate-500">Đã thu</div><div class="font-bold text-emerald-600" x-text="vnd(feeTotals(feeMonth).paid)"></div></div>
+          <div><div class="text-xs text-slate-500">Còn nợ</div><div class="font-bold text-rose-600" x-text="vnd(feeTotals(feeMonth).debt)"></div></div>
+        </div>
+        <div class="h-2 bg-slate-200 rounded"><div class="h-2 bg-emerald-500 rounded" :style="'width:'+feePct(feeMonth)+'%'"></div></div>
+        <div class="text-xs text-slate-500 mt-1" x-text="feePct(feeMonth)+'% đã thu'"></div>
+      </div>
+
+      <div class="flex flex-wrap gap-2 mb-3">
+        <div class="flex bg-white rounded-lg border overflow-hidden text-xs">
+          <button class="px-3 py-1.5" :class="feeFilter==='all'?'bg-indigo-600 text-white':''" @click="feeFilter='all'" x-text="'Tất cả ('+feeCounts(feeMonth).all+')'"></button>
+          <button class="px-3 py-1.5 border-l" :class="feeFilter==='debt'?'bg-rose-600 text-white':''" @click="feeFilter='debt'" x-text="'Còn nợ ('+feeCounts(feeMonth).debt+')'"></button>
+          <button class="px-3 py-1.5 border-l" :class="feeFilter==='paid'?'bg-emerald-600 text-white':''" @click="feeFilter='paid'" x-text="'Đã đóng ('+feeCounts(feeMonth).paid+')'"></button>
+        </div>
+        <select x-model="feeClass" class="border rounded-lg px-2 py-1.5 bg-white text-xs">
+          <option value="">Tất cả lớp</option>
+          <template x-for="c in myClasses()" :key="c.id"><option :value="c.id" x-text="c.name"></option></template>
+        </select>
+        <input x-model="q" placeholder="Tìm học sinh..." class="border rounded-lg px-3 py-1.5 flex-1 min-w-32 text-xs">
+      </div>
+
+      <div class="space-y-2">
+        <template x-for="r in feeRows(feeMonth)" :key="r.e.id">
+          <div class="bg-white rounded-lg shadow-sm p-3 flex flex-wrap items-center gap-3">
+            <span class="w-10 h-10 rounded-full flex items-center justify-center font-semibold shrink-0" :class="r.p?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700'" x-text="initial(r.st.name)"></span>
+            <div class="flex-1 min-w-36">
+              <div class="font-medium" x-text="r.st.name"></div>
+              <div class="text-xs text-slate-500" x-text="r.c.name+' · PH '+r.st.parent_phone"></div>
+            </div>
+            <div class="text-right">
+              <div class="font-semibold" x-text="vnd(r.c.fee)"></div>
+              <span class="rounded-full px-2 py-0.5 text-xs" :class="r.p?'bg-emerald-100 text-emerald-700':'bg-rose-100 text-rose-700'" x-text="r.p?'Đã đóng '+fmtDate(r.p.paid_at):'Còn nợ'"></span>
+            </div>
+            <div class="flex gap-1 w-full sm:w-auto justify-end items-center">
+              <template x-if="!r.p"><span class="flex gap-1">
+                <button class="bg-indigo-600 text-white rounded-lg px-3 py-1.5 text-xs font-medium" @click="qr=r">Mã QR</button>
+                <button class="border rounded-lg px-3 py-1.5 text-xs" @click="pay(r)">Tiền mặt</button>
+              </span></template>
+              <template x-if="r.p"><span class="flex gap-1 items-center">
+                <button class="border rounded-lg px-3 py-1.5 text-xs text-indigo-600" @click="receipt=r">Biên lai</button>
+                <button class="text-slate-400 text-xs px-1" @click="unpay(r)">Hoàn tác</button>
+              </span></template>
+            </div>
+          </div>
+        </template>
+        <div x-show="!feeRows(feeMonth).length" class="bg-white rounded-lg shadow-sm p-8 text-center text-slate-400">Không có khoản thu nào.</div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- FORM MODAL -->
+<div x-show="modal" class="fixed inset-0 bg-black/40 z-40 flex items-end md:items-center justify-center no-print" @keydown.escape.window="modal=null">
+  <div class="bg-white w-full md:max-w-md rounded-t-xl md:rounded-xl p-4 max-h-[90vh] overflow-y-auto" @click.outside="modal=null">
+    <template x-if="modal">
+      <div>
+        <h2 class="font-bold text-base mb-3" x-text="(modal.isNew?'Thêm ':'Sửa ')+TITLES[modal.table]"></h2>
+        <template x-for="f in FORMS[modal.table]" :key="f.k">
+          <label class="block mb-2" x-show="fshow(f)">
+            <span class="text-xs text-slate-500" x-text="f.label"></span>
+            <template x-if="f.type==='select'">
+              <select class="w-full border rounded px-2 py-1.5" x-model="modal.item[f.k]">
+                <template x-for="o in (f.list||data[f.opts])" :key="o.id"><option :value="o.id" x-text="o.name"></option></template>
+              </select>
+            </template>
+            <template x-if="f.type==='days'">
+              <div class="flex gap-1 mt-1">
+                <template x-for="d in [1,2,3,4,5,6,0]" :key="d">
+                  <button type="button" class="w-9 py-1 rounded border text-xs" :class="modal.item.days.includes(d)?'bg-indigo-600 text-white border-indigo-600':''"
+                    @click="modal.item.days = modal.item.days.includes(d) ? modal.item.days.filter(x=>x!==d) : [...modal.item.days,d]" x-text="d?'T'+(d+1):'CN'"></button>
+                </template>
+              </div>
+            </template>
+            <template x-if="!['select','days'].includes(f.type)">
+              <input class="w-full border rounded px-2 py-1.5" :type="f.type||'text'" x-model="modal.item[f.k]">
+            </template>
+          </label>
+        </template>
+        <div class="flex justify-end gap-2 mt-4">
+          <button class="px-3 py-1.5 rounded border" @click="modal=null">Hủy</button>
+          <button class="px-4 py-1.5 rounded bg-indigo-600 text-white" @click="saveForm()">Lưu</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<!-- RECEIPT MODAL -->
+<div x-show="receipt" class="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-3" @keydown.escape.window="receipt=null">
+  <div class="bg-white rounded-xl p-5 w-full max-w-sm">
+    <div id="receipt" class="bg-white">
+      <template x-if="receipt">
+        <div>
+          <div class="text-center mb-3">
+            <div class="font-bold text-base">BIÊN LAI THU HỌC PHÍ</div>
+            <div class="text-xs text-slate-500" x-text="'Số: '+receipt.p.id.toUpperCase()+' · Ngày '+fmtDate(receipt.p.paid_at)"></div>
+          </div>
+          <div class="space-y-1">
+            <div>Học sinh: <b x-text="receipt.st.name"></b></div>
+            <div>Phụ huynh: <span x-text="receipt.st.parent_name"></span></div>
+            <div>Lớp: <span x-text="receipt.c.name"></span></div>
+            <div>Kỳ thu: <span x-text="'Tháng '+receipt.p.period.slice(5)+'/'+receipt.p.period.slice(0,4)"></span></div>
+            <div>Hình thức: <span x-text="receipt.p.method==='bank'?'Chuyển khoản':'Tiền mặt'"></span></div>
+            <div class="text-lg pt-2">Số tiền: <b x-text="vnd(receipt.p.amount)"></b></div>
+          </div>
+          <div class="flex justify-between mt-6 text-xs text-slate-500"><span>Người nộp</span><span>Người thu</span></div>
+          <div class="h-12"></div>
+        </div>
+      </template>
+    </div>
+    <div class="flex justify-end gap-2 no-print">
+      <button class="px-3 py-1.5 rounded border" @click="receipt=null">Đóng</button>
+      <button class="px-4 py-1.5 rounded bg-indigo-600 text-white" @click="window.print()">In biên lai</button>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT GRADES MODAL -->
+<div x-show="gradeStudent" class="fixed inset-0 bg-black/40 z-40 flex items-end md:items-center justify-center no-print" @keydown.escape.window="gradeStudent=null">
+  <div class="bg-white w-full md:max-w-lg rounded-t-xl md:rounded-xl p-4 max-h-[90vh] overflow-y-auto" @click.outside="gradeStudent=null">
+    <template x-if="gradeStudent && by('students',gradeStudent)">
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <span class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-semibold" x-text="initial(by('students',gradeStudent).name)"></span>
+          <div class="flex-1"><div class="font-bold" x-text="by('students',gradeStudent).name"></div><div class="text-xs text-slate-500" x-text="by('classes',gradeClass)?.name"></div></div>
+          <button class="text-slate-400 text-xl" @click="gradeStudent=null">✕</button>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center mb-3">
+          <div class="bg-slate-50 rounded p-2"><div class="text-xs text-slate-500">Điểm TB</div><div class="font-bold" x-text="studentGrades(gradeStudent).avg===null?'—':studentGrades(gradeStudent).avg.toFixed(2)"></div></div>
+          <div class="bg-slate-50 rounded p-2"><div class="text-xs text-slate-500">Cao nhất</div><div class="font-bold text-emerald-600" x-text="studentGrades(gradeStudent).best ?? '—'"></div></div>
+          <div class="bg-slate-50 rounded p-2"><div class="text-xs text-slate-500">Thấp nhất</div><div class="font-bold text-rose-600" x-text="studentGrades(gradeStudent).low ?? '—'"></div></div>
+        </div>
+        <template x-for="row in studentGrades(gradeStudent).rows" :key="row.e.id">
+          <div class="border-t py-2 flex gap-3">
+            <span class="w-12 text-center shrink-0 rounded px-1 py-1 font-semibold self-start" :class="scoreCls(row.r?.score,row.e.max)" x-text="row.r&&row.r.score!==''?row.r.score:'—'"></span>
+            <div class="min-w-0">
+              <div class="text-xs text-slate-500" x-text="'#'+row.no+' · '+row.e.name+' · '+fmtDate(row.e.date)"></div>
+              <div class="text-sm" x-text="row.r?.comment||'(chưa có nhận xét)'" :class="row.r?.comment?'':'text-slate-300'"></div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+  </div>
+</div>
+
+<!-- QR MODAL -->
+<div x-show="qr" class="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-3 no-print" @keydown.escape.window="qr=null">
+  <div class="bg-white rounded-xl p-5 w-full max-w-sm max-h-[95vh] overflow-y-auto">
+    <template x-if="qr">
+      <div class="text-center">
+        <h2 class="font-bold text-base" x-text="'QR học phí · '+qr.st.name"></h2>
+        <p class="text-xs text-slate-500 mb-2" x-text="qr.c.name+' · tháng '+feeMonth.slice(5)+'/'+feeMonth.slice(0,4)"></p>
+        <img :src="qrUrl(qr)" alt="QR chuyển khoản" class="mx-auto w-64 h-auto border rounded" onerror="this.alt='Không tải được QR (cần Internet)'">
+        <div class="text-left text-xs mt-3 space-y-1 bg-slate-50 rounded p-2">
+          <div>Ngân hàng: <b x-text="data.settings.bank"></b> · STK: <b x-text="data.settings.account"></b></div>
+          <div>Chủ TK: <b x-text="data.settings.accountName"></b></div>
+          <div>Số tiền: <b x-text="vnd(qr.c.fee)"></b></div>
+          <div>Nội dung: <b class="font-mono" x-text="payCode(qr)"></b> <button class="text-indigo-600 ml-1" @click="navigator.clipboard?.writeText(payCode(qr));flash('Đã copy nội dung')">Copy</button></div>
+        </div>
+        <p class="text-xs text-slate-400 mt-2">Sau này: webhook ngân hàng gửi nội dung CK → hệ thống khớp mã trên để tự động đánh dấu đã đóng.</p>
+        <div class="flex justify-end gap-2 mt-3">
+          <button class="px-3 py-1.5 rounded border" @click="qr=null">Đóng</button>
+          <button class="px-3 py-1.5 rounded bg-emerald-600 text-white" @click="payBank(qr)">Giả lập: đã nhận tiền</button>
+        </div>
+      </div>
+    </template>
+  </div>
+</div>
+
+<!-- BANK SETTINGS MODAL -->
+<div x-show="settingsOpen" class="fixed inset-0 bg-black/40 z-40 flex items-center justify-center p-3 no-print" @keydown.escape.window="settingsOpen=false">
+  <div class="bg-white rounded-xl p-5 w-full max-w-sm">
+    <h2 class="font-bold text-base mb-3">Tài khoản nhận học phí</h2>
+    <label class="block mb-2"><span class="text-xs text-slate-500">Ngân hàng</span>
+      <select class="w-full border rounded px-2 py-1.5" x-model="data.settings.bank">
+        <template x-for="b in BANKS" :key="b"><option :value="b" x-text="b"></option></template>
+      </select></label>
+    <label class="block mb-2"><span class="text-xs text-slate-500">Số tài khoản</span><input class="w-full border rounded px-2 py-1.5" x-model="data.settings.account"></label>
+    <label class="block mb-2"><span class="text-xs text-slate-500">Tên chủ tài khoản (không dấu)</span><input class="w-full border rounded px-2 py-1.5" x-model="data.settings.accountName"></label>
+    <p class="text-xs text-slate-400">Demo dùng ảnh QR VietQR công khai; tài khoản mẫu không phải tài khoản thật.</p>
+    <div class="flex justify-end mt-3"><button class="px-4 py-1.5 rounded bg-indigo-600 text-white" @click="settingsOpen=false;save()">Xong</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div x-show="toast" x-transition class="fixed top-14 left-1/2 -translate-x-1/2 bg-slate-800 text-white rounded px-4 py-2 z-50 no-print" x-text="toast"></div>
+
+<script>
+/* ---------- helpers ---------- */
+const pad = n => String(n).padStart(2,'0');
+const iso = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const uid = () => Math.random().toString(36).slice(2,8);
+const rng = s => () => (s = (s*1664525+1013904223) % 4294967296) / 4294967296;
+const ICONS = {
+  dashboard:'<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+  cap:'<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+  book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  tag:'<path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/>',
+  check:'<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/>',
+  clip:'<rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/>',
+  wallet:'<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>'
+};
+const THEMES = [{id:'a',label:'A · Clean'},{id:'b',label:'B · Dark Pro'},{id:'c',label:'C · Thân thiện'}];
+const WEEKDAYS = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+const PALETTE = [
+  {dot:'bg-indigo-500',chip:'bg-indigo-100 text-indigo-800'}, {dot:'bg-emerald-500',chip:'bg-emerald-100 text-emerald-800'},
+  {dot:'bg-sky-500',chip:'bg-sky-100 text-sky-800'}, {dot:'bg-violet-500',chip:'bg-violet-100 text-violet-800'},
+  {dot:'bg-teal-500',chip:'bg-teal-100 text-teal-800'}, {dot:'bg-orange-500',chip:'bg-orange-100 text-orange-800'}];
+
+/* ---------- seed (tên bảng/cột trùng schema SQL) ---------- */
+const TEACHERS = [['t1','Nguyễn Thị Lan','0912345678'],['t2','Trần Văn Minh','0987654321'],['t3','Lê Hoàng Anh','0903111222']];
+const SUBJECTS = [['s1','Toán'],['s2','Tiếng Anh'],['s3','Vật lý'],['s4','Ngữ văn']];
+const CLASSES_CENTER = [
+  ['c1','Toán 9A','s1','t1',[1,3],'18:00-19:30','P101',600000],
+  ['c2','Toán 12 luyện thi','s1','t2',[2,4],'19:30-21:00','P102',800000],
+  ['c3','Tiếng Anh giao tiếp','s2','t3',[2,5],'17:30-19:00','P201',700000],
+  ['c4','Vật lý 10','s3','t2',[3,6],'18:00-19:30','P103',650000],
+  ['c5','Ngữ văn 11','s4','t1',[4,6],'19:30-21:00','P101',550000]];
+const CLASSES_SOLO = [
+  ['c1','Toán 9 - nhóm A',null,'t1',[1,3],'18:00-19:30','Nhà cô',500000],
+  ['c2','Toán 12 luyện thi',null,'t1',[2,4],'19:30-21:00','Nhà cô',700000],
+  ['c3','Toán 6 - kèm nhóm nhỏ',null,'t1',[6],'09:00-10:30','Nhà cô',400000],
+  ['c4','Toán 8 - cuối tuần',null,'t1',[0],'15:00-16:30','Nhà cô',450000]];
+const STUDENTS = ['Nguyễn Minh Khôi','Trần Gia Hân','Lê Quang Huy','Phạm Thảo Nguyên','Hoàng Đức Anh','Vũ Ngọc Mai','Đặng Bảo Châu','Bùi Anh Tuấn','Đỗ Khánh Linh','Ngô Hải Đăng','Dương Phương Thảo','Lý Gia Bảo','Phan Thu Hà','Võ Thành Đạt','Trịnh Mỹ Linh','Huỳnh Nhật Minh','Mai Tuệ Lâm','Đinh Hoàng Yến','Cao Văn Long','Tạ Diễm Quỳnh','Lương Gia Khang','Châu Bích Ngọc','Kiều Minh Quân','Hà Thùy Dương','Tô Anh Khoa'];
+const PARENTS = ['Nguyễn Văn Hùng','Trần Thị Hoa','Lê Văn Tâm','Phạm Thị Thu','Hoàng Văn Nam','Vũ Thị Lệ','Đặng Văn Sơn','Bùi Thị Hạnh'];
+
+const BANKS = ['MB','VCB','ACB','TCB','BIDV','VPB','TPB','ICB','STB'];
+const DEFAULT_BANK = {bank:'MB', account:'0123456789', accountName:'TRUNG TAM DEMO'};
+const COMMENTS = ['Làm bài tốt','Cần cẩn thận hơn','Tiến bộ rõ rệt','Nên ôn lại phần cơ bản','Chưa nộp đủ bài tập','Trình bày sạch đẹp','Sai sót do thiếu tập trung','Cần luyện thêm dạng bài nâng cao'];
+const EXAMS_PER_CLASS = 20;
+const DB_KEY = 'demoEdu2:';   // đổi key khi đổi cấu trúc dữ liệu mẫu
+
+function seed(mode){
+  const solo = mode==='solo', r = rng(solo?7:42), today = new Date();
+  const addDays = n => { const d = new Date(today); d.setDate(d.getDate()+n); return d };
+  const D = { teachers:[], subjects:[], classes:[], students:[], enrollments:[], sessions:[], attendance:[], payments:[], exams:[], scores:[], events:[], settings:{...DEFAULT_BANK} };
+  D.teachers = (solo?TEACHERS.slice(0,1):TEACHERS).map(([id,name,phone])=>({id,name,phone,email:'gv'+id+'@example.com'}));
+  if(!solo) D.subjects = SUBJECTS.map(([id,name])=>({id,name}));
+  D.classes = (solo?CLASSES_SOLO:CLASSES_CENTER).map(([id,name,subject_id,teacher_id,days,time,room,fee])=>({id,name,subject_id,teacher_id,days,time,room,fee}));
+  D.students = STUDENTS.slice(0, solo?14:25).map((name,i)=>({
+    id:'st'+i, name, dob:(2008+(i%6))+'-'+pad(1+i%12)+'-'+pad(1+(i*3)%28),
+    parent_name:PARENTS[i%PARENTS.length], parent_phone:'09'+String(10000000+Math.floor(r()*89999999))}));
+  const nc = D.classes.length, start = iso(addDays(-150));
+  D.students.forEach((s,i)=>{
+    const cs = new Set([i%nc]); if(i%3===0) cs.add((i+1)%nc);
+    cs.forEach(ci => D.enrollments.push({id:'e'+i+'_'+ci, student_id:s.id, class_id:D.classes[ci].id, start}));
+  });
+  // điểm danh 8 tuần gần nhất
+  for(let n=-56;n<=-1;n++){
+    const d = addDays(n);
+    D.classes.forEach(c=>{
+      if(!c.days.includes(d.getDay())) return;
+      const sid = uid(); D.sessions.push({id:sid, class_id:c.id, date:iso(d)});
+      D.enrollments.filter(e=>e.class_id===c.id).forEach(e=>{
+        const x = r(); D.attendance.push({session_id:sid, student_id:e.student_id, status:x<.82?'present':x<.93?'absent':'excused'});
+      });
+    });
+  }
+  // 20 bài kiểm tra / lớp, mỗi học sinh có điểm đủ 20 bài
+  const ability = {}; D.students.forEach(s=>ability[s.id]=4.8+r()*3.7);
+  D.classes.forEach(c=>{
+    for(let k=0;k<EXAMS_PER_CLASS;k++){
+      const ex = {id:'ex'+c.id+'_'+k, class_id:c.id, name:(k%5===4?'Kiểm tra 1 tiết':'Kiểm tra 15 phút')+' bài '+(k+1), date:iso(addDays(-7*(EXAMS_PER_CLASS-k))), max:10};
+      D.exams.push(ex);
+      D.enrollments.filter(e=>e.class_id===c.id).forEach(e=>{
+        const sc = Math.max(0,Math.min(10,Math.round((ability[e.student_id]+(k/EXAMS_PER_CLASS-.5)*.8+(r()-.5)*3.2)*4)/4));
+        D.scores.push({exam_id:ex.id, student_id:e.student_id, score:sc, comment:r()<.35?COMMENTS[Math.floor(r()*COMMENTS.length)]:''});
+      });
+    }
+  });
+  // lịch sắp tới: học bù, nghỉ, kiểm tra
+  const nextDay = (from,days) => { for(let n=from;n<from+14;n++){ if(days.includes(addDays(n).getDay())) return n } return from };
+  const ev = (cls,n,type,time,note) => cls && D.events.push({id:uid(), class_id:cls.id, date:iso(addDays(n)), type, time, note});
+  const [c1,c2,c3,c4,c5] = D.classes;
+  ev(c1, 4, 'makeup', '16:00-17:30', 'Học bù buổi nghỉ tuần trước');
+  ev(c2, nextDay(2,c2.days), 'off', '', 'GV bận việc riêng');
+  ev(c3, nextDay(5,c3.days), 'exam', '', 'Kiểm tra giữa kỳ');
+  ev(c1, nextDay(10,c1.days), 'exam', '', 'Kiểm tra 1 tiết');
+  ev(c2, 12, 'makeup', '09:00-10:30', 'Ôn tập trước kỳ thi');
+  ev(c4, nextDay(16,c4.days), 'off', '', 'Nghỉ lễ');
+  ev(c5, 20, 'exam', '', 'Kiểm tra cuối kỳ');
+  ev(c3, -3, 'makeup', '18:30-20:00', 'Học bù');
+  // học phí 2 tháng
+  const prev = new Date(today.getFullYear(), today.getMonth()-1, 15);
+  [[prev,.85],[today,.45]].forEach(([d,p])=>{
+    const period = iso(d).slice(0,7);
+    D.enrollments.forEach(e=>{
+      if(r()>=p) return;
+      const c = D.classes.find(c=>c.id===e.class_id);
+      D.payments.push({id:uid(), student_id:e.student_id, class_id:e.class_id, period, amount:c.fee, paid_at: d===today?iso(today):period+'-'+pad(3+Math.floor(r()*15))});
+    });
+  });
+  return D;
+}
+
+/* ---------- cấu hình form ---------- */
+const TITLES = {students:'học sinh', classes:'lớp học', teachers:'giáo viên', subjects:'môn học', exams:'bài kiểm tra', events:'sự kiện lịch'};
+const FORMS = {
+  events:[{k:'class_id',label:'Lớp',type:'select',opts:'classes'},
+    {k:'type',label:'Loại',type:'select',list:[{id:'makeup',name:'Học bù'},{id:'exam',name:'Kiểm tra'},{id:'off',name:'Nghỉ'}]},
+    {k:'date',label:'Ngày',type:'date'},{k:'time',label:'Giờ (bỏ trống = giờ của lớp)'},{k:'note',label:'Ghi chú'}],
+  exams:[{k:'name',label:'Tên bài kiểm tra'},{k:'date',label:'Ngày',type:'date'},{k:'max',label:'Thang điểm tối đa',type:'number'}],
+  students:[{k:'name',label:'Họ tên'},{k:'dob',label:'Ngày sinh',type:'date'},{k:'parent_name',label:'Phụ huynh'},{k:'parent_phone',label:'SĐT phụ huynh',type:'tel'}],
+  teachers:[{k:'name',label:'Họ tên'},{k:'phone',label:'SĐT',type:'tel'},{k:'email',label:'Email',type:'email'}],
+  subjects:[{k:'name',label:'Tên môn'}],
+  classes:[{k:'name',label:'Tên lớp'},
+    {k:'subject_id',label:'Môn',type:'select',opts:'subjects',only:'center'},
+    {k:'teacher_id',label:'Giáo viên',type:'select',opts:'teachers',only:'admin'},
+    {k:'days',label:'Ngày học',type:'days'},{k:'time',label:'Giờ học (VD 18:00-19:30)'},{k:'room',label:'Phòng / địa điểm'},
+    {k:'fee',label:'Học phí / tháng (đ)',type:'number'}]
+};
+
+/* ---------- app ---------- */
+function app(){ return {
+  mode:'center', role:'admin', view:'dashboard', q:'',
+  data:{teachers:[],subjects:[],classes:[],students:[],enrollments:[],sessions:[],attendance:[],payments:[],exams:[],scores:[],events:[],settings:{...DEFAULT_BANK}},
+  theme:'a', ICONS, THEMES, modal:null, receipt:null, toast:'', classId:null, addStudent:'', qr:null, settingsOpen:false, BANKS, FORMS, TITLES,
+  today:iso(new Date()), thisMonth:iso(new Date()).slice(0,7),
+  calMonth:iso(new Date()).slice(0,7), calDay:iso(new Date()),
+  attClass:'', attDate:iso(new Date()), att:{}, attTab:'mark',
+  gradeClass:'', gradeExam:'', gradeTab:'matrix', gradeStudent:null, sc:{},
+  feeMonth:iso(new Date()).slice(0,7), feeFilter:'all', feeClass:'',
+
+  init(){ try{ this.mode = localStorage.getItem('demoEdu:mode')||'center'; this.theme = localStorage.getItem('demoEdu:theme')||'a' }catch{} this.load() },
+  setTheme(id){ this.theme=id; try{ localStorage.setItem('demoEdu:theme',id) }catch{} },
+  load(){
+    let d; try{ d = JSON.parse(localStorage.getItem(DB_KEY+this.mode)) }catch{}
+    this.data = d?.events ? d : seed(this.mode); this.role='admin'; this.go('dashboard'); this.save();
+  },
+  save(){ try{ localStorage.setItem(DB_KEY+this.mode, JSON.stringify(this.data)) }catch{} },
+  setMode(m){ this.mode=m; try{ localStorage.setItem('demoEdu:mode',m) }catch{} this.load() },
+  reset(){ if(confirm('Xóa dữ liệu hiện tại và nạp lại dữ liệu mẫu?')){ this.data=seed(this.mode); this.save(); this.go('dashboard') } },
+  flash(m){ this.toast=m; setTimeout(()=>this.toast='',1800) },
+
+  /* nav + quyền */
+  isAdmin(){ return this.mode==='solo' || this.role==='admin' },
+  canFees(){ return this.isAdmin() },
+  menu(){
+    const m=[{id:'dashboard',label:'Tổng quan',icon:'dashboard'},{id:'students',label:'Học sinh',icon:'cap'},{id:'classes',label:'Lớp học',icon:'book'}];
+    if(this.mode==='center' && this.role==='admin') m.push({id:'teachers',label:'Giáo viên',icon:'users'},{id:'subjects',label:'Môn học',icon:'tag'});
+    m.push({id:'attendance',label:'Điểm danh',icon:'check'},{id:'grades',label:'Điểm số',icon:'clip'});
+    if(this.canFees()) m.push({id:'fees',label:'Học phí',icon:'wallet'});
+    return m;
+  },
+  /* đổi trang: reset mọi lựa chọn để màn Điểm danh / Điểm số luôn bắt đầu ở "Hãy chọn lớp" */
+  go(v){
+    this.view=v; this.q='';
+    this.attClass=''; this.attTab='mark'; this.attDate=this.today; this.att={};
+    this.gradeClass=''; this.gradeExam=''; this.gradeTab='matrix'; this.gradeStudent=null; this.sc={};
+    this.feeClass=''; this.feeFilter='all';
+  },
+
+  /* tra cứu */
+  by(t,id){ return this.data[t].find(x=>x.id===id) },
+  name(t,id){ return this.by(t,id)?.name||'—' },
+  myClasses(){ return this.isAdmin()?this.data.classes:this.data.classes.filter(c=>c.teacher_id===this.role) },
+  enrolled(cid){ return this.data.enrollments.filter(e=>e.class_id===cid).map(e=>this.by('students',e.student_id)).filter(Boolean) },
+  notEnrolled(cid){ const ids=new Set(this.enrolled(cid).map(s=>s.id)); return this.data.students.filter(s=>!ids.has(s.id)) },
+  studentClasses(sid){ return this.data.enrollments.filter(e=>e.student_id===sid).map(e=>this.by('classes',e.class_id)).filter(Boolean) },
+  filteredStudents(){ const q=this.q.toLowerCase(); return this.data.students.filter(s=>!q||(s.name+s.parent_phone+s.parent_name).toLowerCase().includes(q)) },
+  schedule(c){ return c.days.map(d=>d?'T'+(d+1):'CN').join(', ')+' '+c.time },
+  vnd(n){ return (n||0).toLocaleString('vi-VN')+' đ' },
+  fmtDate(s){ return s?s.split('-').reverse().join('/'):'—' },
+  wd(date){ return WEEKDAYS[new Date(date+'T00:00:00').getDay()] },
+  initial(n){ return (n||'?').trim().split(/\s+/).pop()[0] },
+  color(c){ return PALETTE[Math.max(0,this.data.classes.findIndex(x=>x.id===c.id))%PALETTE.length] },
+  shiftMonth(m,n){ const [y,mo]=m.split('-').map(Number); return iso(new Date(y,mo-1+n,1)).slice(0,7) },
+
+  /* CRUD chung */
+  fshow(f){ return !f.only || (f.only==='center'&&this.mode==='center') || (f.only==='admin'&&this.mode==='center'&&this.role==='admin') },
+  openForm(t,item){
+    const first = k => this.data[k][0]?.id||null;
+    const def = {
+      events:{class_id:this.myClasses()[0]?.id||null, type:'makeup', date:this.calDay, time:'', note:''},
+      exams:{name:'',date:this.today,max:10,class_id:this.gradeClass},
+      students:{name:'',dob:'',parent_name:'',parent_phone:''}, teachers:{name:'',phone:'',email:''}, subjects:{name:''},
+      classes:{name:'',subject_id:this.mode==='center'?first('subjects'):null, teacher_id:this.mode==='solo'?first('teachers'):(this.role==='admin'?first('teachers'):this.role), days:[],time:'18:00-19:30',room:'',fee:500000} }[t];
+    this.modal = {table:t, isNew:!item, item:item?JSON.parse(JSON.stringify(item)):def};
+  },
+  saveForm(){
+    const {table,item,isNew}=this.modal;
+    if(table!=='events' && !String(item.name).trim()) return alert('Vui lòng nhập tên');
+    if(table==='events' && !item.date) return alert('Chọn ngày');
+    if(table==='classes'){ item.fee=+item.fee||0; if(!item.days.length) return alert('Chọn ít nhất 1 ngày học') }
+    if(table==='exams'){ item.max=+item.max||10 }
+    if(isNew){ item.id=uid(); this.data[table].push(item) } else Object.assign(this.by(table,item.id), item);
+    if(table==='exams'&&isNew){ this.gradeExam=item.id; this.gradeTab='enter'; this.loadScores() }
+    if(table==='events'){ this.calDay=item.date; this.calMonth=item.date.slice(0,7) }
+    this.modal=null; this.save(); this.flash('Đã lưu');
+  },
+  del(t,id){
+    const D=this.data;
+    if(t==='teachers' && D.classes.some(c=>c.teacher_id===id)) return alert('Giáo viên đang phụ trách lớp, hãy chuyển lớp trước.');
+    if(t==='subjects' && D.classes.some(c=>c.subject_id===id)) return alert('Môn đang được dùng bởi lớp học.');
+    if(!confirm('Xóa mục này?')) return;
+    D[t]=D[t].filter(x=>x.id!==id);
+    if(t==='exams'){ D.scores=D.scores.filter(s=>s.exam_id!==id); this.gradeExam='' }
+    if(t==='students'){ D.scores=D.scores.filter(s=>s.student_id!==id); D.enrollments=D.enrollments.filter(e=>e.student_id!==id); D.attendance=D.attendance.filter(a=>a.student_id!==id); D.payments=D.payments.filter(p=>p.student_id!==id) }
+    if(t==='classes'){
+      const sids=new Set(D.sessions.filter(s=>s.class_id===id).map(s=>s.id));
+      const eids=new Set(D.exams.filter(e=>e.class_id===id).map(e=>e.id));
+      D.exams=D.exams.filter(e=>e.class_id!==id); D.scores=D.scores.filter(s=>!eids.has(s.exam_id));
+      D.sessions=D.sessions.filter(s=>s.class_id!==id); D.attendance=D.attendance.filter(a=>!sids.has(a.session_id));
+      D.events=D.events.filter(e=>e.class_id!==id);
+      D.enrollments=D.enrollments.filter(e=>e.class_id!==id); D.payments=D.payments.filter(p=>p.class_id!==id);
+    }
+    this.save();
+  },
+
+  /* ghi danh */
+  enroll(){ if(!this.addStudent) return;
+    this.data.enrollments.push({id:uid(), student_id:this.addStudent, class_id:this.classId, start:this.today}); this.addStudent=''; this.save() },
+  unenroll(sid){ this.data.enrollments=this.data.enrollments.filter(e=>!(e.student_id===sid&&e.class_id===this.classId)); this.save() },
+
+  /* lịch tháng (dashboard) */
+  calTitle(){ const [y,m]=this.calMonth.split('-'); return 'Tháng '+m+'/'+y },
+  calNav(n){ this.calMonth=this.shiftMonth(this.calMonth,n) },
+  calToday(){ this.calMonth=this.today.slice(0,7); this.calDay=this.today },
+  calCells(){
+    const [y,m]=this.calMonth.split('-').map(Number), lead=(new Date(y,m-1,1).getDay()+6)%7, days=new Date(y,m,0).getDate();
+    return Array.from({length:Math.ceil((lead+days)/7)*7},(_,i)=>{
+      const d=new Date(y,m-1,1-lead+i), date=iso(d);
+      return {date, inMonth:d.getMonth()===m-1, items:this.dayItems(date)};
+    });
+  },
+  /* buổi học = lịch cố định của lớp + sự kiện (bù / kiểm tra / nghỉ) */
+  dayItems(date){
+    const dow=new Date(date+'T00:00:00').getDay(), mine=this.myClasses(), ids=new Set(mine.map(c=>c.id));
+    const ev=this.data.events.filter(e=>e.date===date&&ids.has(e.class_id)), out=[];
+    mine.forEach(c=>{
+      if(!c.days.includes(dow)) return;
+      const off=ev.find(e=>e.class_id===c.id&&e.type==='off');
+      out.push({key:'c'+c.id, kind:off?'off':'class', c, time:c.time, label:c.name+(off?' (nghỉ)':''), ev:off});
+    });
+    ev.filter(e=>e.type!=='off').forEach(e=>{ const c=this.by('classes',e.class_id);
+      out.push({key:'e'+e.id, kind:e.type, c, time:e.time||c.time, label:c.name+(e.type==='makeup'?' (bù)':' · KT'), ev:e}) });
+    return out.sort((a,b)=>a.time.localeCompare(b.time));
+  },
+  itemCls(it){ return it.kind==='off'?'bg-slate-100 text-slate-400 line-through':it.kind==='exam'?'bg-rose-100 text-rose-700':it.kind==='makeup'?'bg-amber-100 text-amber-800':this.color(it.c).chip },
+  itemDot(it){ return it.kind==='off'?'bg-slate-300':it.kind==='exam'?'bg-rose-500':it.kind==='makeup'?'bg-amber-500':this.color(it.c).dot },
+  hasSession(cid,date){ return this.data.sessions.some(s=>s.class_id===cid&&s.date===date) },
+  toggleOff(it){
+    if(it.ev) this.data.events=this.data.events.filter(e=>e.id!==it.ev.id);
+    else this.data.events.push({id:uid(), class_id:it.c.id, date:this.calDay, type:'off', time:'', note:''});
+    this.save();
+  },
+  openAtt(cid,date){ this.go('attendance'); this.attClass=cid; this.attDate=date; this.loadAtt() },
+
+  /* điểm danh */
+  pickAttClass(id){ this.attClass=id; this.attTab='mark'; this.attDate=this.today; this.loadAtt() },
+  shiftAttDay(n){ const d=new Date(this.attDate+'T00:00:00'); d.setDate(d.getDate()+n); this.attDate=iso(d); this.loadAtt() },
+  findSession(){ return this.data.sessions.find(s=>s.class_id===this.attClass&&s.date===this.attDate) },
+  loadAtt(){
+    const s=this.findSession(), a={};
+    this.enrolled(this.attClass).forEach(st=>{ a[st.id]=(s&&this.data.attendance.find(x=>x.session_id===s.id&&x.student_id===st.id)?.status)||'present' });
+    this.att=a;
+  },
+  saveAtt(){
+    let s=this.findSession();
+    if(!s){ s={id:uid(),class_id:this.attClass,date:this.attDate}; this.data.sessions.push(s) }
+    this.data.attendance=this.data.attendance.filter(a=>a.session_id!==s.id);
+    Object.entries(this.att).forEach(([student_id,status])=>this.data.attendance.push({session_id:s.id,student_id,status}));
+    this.save(); this.flash('Đã lưu điểm danh');
+  },
+  attHistory(){
+    return this.data.sessions.filter(s=>s.class_id===this.attClass).sort((a,b)=>b.date.localeCompare(a.date)).map(s=>{
+      const rows=this.data.attendance.filter(a=>a.session_id===s.id), n=k=>rows.filter(a=>a.status===k).length;
+      return {s, present:n('present'), excused:n('excused'), absent:n('absent'),
+        absentNames:rows.filter(a=>a.status==='absent').map(a=>this.by('students',a.student_id)?.name).filter(Boolean)};
+    });
+  },
+  attStudentStats(){
+    const sids=new Set(this.data.sessions.filter(s=>s.class_id===this.attClass).map(s=>s.id));
+    return this.enrolled(this.attClass).map(st=>{
+      const rows=this.data.attendance.filter(a=>a.student_id===st.id&&sids.has(a.session_id)), n=k=>rows.filter(a=>a.status===k).length;
+      return {st, present:n('present'), excused:n('excused'), absent:n('absent'), rate:rows.length?Math.round(n('present')/rows.length*100):null};
+    });
+  },
+
+  /* điểm số */
+  pickGradeClass(id){ this.gradeClass=id; this.gradeExam=''; this.gradeTab='matrix'; this.sc={} },
+  classExams(){ return this.data.exams.filter(e=>e.class_id===this.gradeClass).sort((a,b)=>a.date.localeCompare(b.date)) },
+  examNo(eid){ return this.classExams().findIndex(e=>e.id===eid)+1 },
+  enterExam(eid){ this.gradeExam=eid; this.gradeTab='enter'; this.loadScores() },
+  scoreOf(eid,sid){ return this.data.scores.find(x=>x.exam_id===eid&&x.student_id===sid) },
+  scoreCls(v,max){ if(v===undefined||v===null||v==='') return 'text-slate-300'; const x=v/max*10; return x<5?'bg-rose-100 text-rose-700':x>=8?'bg-emerald-100 text-emerald-700':'bg-slate-100 text-slate-700' },
+  loadScores(){
+    const sc={}; this.enrolled(this.gradeClass).forEach(s=>{ const r=this.scoreOf(this.gradeExam,s.id); sc[s.id]={score:r?r.score:'',comment:r?r.comment:''} });
+    this.sc=sc;
+  },
+  saveScores(){
+    const ex=this.by('exams',this.gradeExam), rows=Object.entries(this.sc);
+    if(rows.some(([,v])=>v.score!==''&&(v.score<0||v.score>ex.max))) return alert('Điểm phải từ 0 đến '+ex.max);
+    this.data.scores=this.data.scores.filter(x=>x.exam_id!==ex.id);
+    rows.forEach(([student_id,v])=>{ if(v.score!==''||v.comment.trim()) this.data.scores.push({exam_id:ex.id,student_id,score:v.score,comment:v.comment.trim()}) });
+    this.save(); this.flash('Đã lưu điểm');
+  },
+  avg(sid,cid){
+    const v=this.data.scores.filter(x=>x.student_id===sid&&x.score!=='').map(x=>{ const e=this.by('exams',x.exam_id); return e&&e.class_id===cid?x.score/e.max*10:null }).filter(x=>x!==null);
+    return v.length?v.reduce((a,b)=>a+b,0)/v.length:null;
+  },
+  gradeMatrix(){
+    const ex=this.classExams();
+    return this.enrolled(this.gradeClass).map(st=>({st, avg:this.avg(st.id,this.gradeClass), cells:ex.map(e=>({e, r:this.scoreOf(e.id,st.id)}))}));
+  },
+  studentGrades(sid){
+    const rows=this.classExams().map((e,i)=>({e, no:i+1, r:this.scoreOf(e.id,sid)})).reverse();
+    const vals=rows.filter(x=>x.r&&x.r.score!=='').map(x=>x.r.score);
+    return {rows, avg:this.avg(sid,this.gradeClass), best:vals.length?Math.max(...vals):null, low:vals.length?Math.min(...vals):null};
+  },
+
+  /* học phí */
+  feeAll(m){
+    const q=this.q.toLowerCase(), mine=new Set(this.myClasses().map(c=>c.id));
+    return this.data.enrollments.filter(e=>e.start<=m+'-31'&&mine.has(e.class_id)&&(!this.feeClass||e.class_id===this.feeClass)).map(e=>({
+      e, c:this.by('classes',e.class_id), st:this.by('students',e.student_id),
+      p:this.data.payments.find(p=>p.student_id===e.student_id&&p.class_id===e.class_id&&p.period===m)
+    })).filter(r=>r.c&&r.st&&(!q||r.st.name.toLowerCase().includes(q)))
+       .sort((a,b)=>a.st.name.localeCompare(b.st.name,'vi'));
+  },
+  feeRows(m){ return this.feeAll(m).filter(r=>this.feeFilter==='all'||(this.feeFilter==='paid')===!!r.p) },
+  feeCounts(m){ const a=this.feeAll(m), paid=a.filter(r=>r.p).length; return {all:a.length, paid, debt:a.length-paid} },
+  feeTotals(m){
+    const all=this.feeAll(m), total=all.reduce((s,r)=>s+r.c.fee,0), paid=all.reduce((s,r)=>s+(r.p?r.c.fee:0),0);
+    return {total,paid,debt:total-paid};
+  },
+  feePct(m){ const t=this.feeTotals(m); return t.total?Math.round(t.paid/t.total*100):0 },
+  pay(r,method='cash'){ this.data.payments.push({id:uid(),student_id:r.st.id,class_id:r.c.id,period:this.feeMonth,amount:r.c.fee,paid_at:this.today,method}); this.save(); this.flash('Đã thu tiền') },
+  payBank(r){ this.pay(r,'bank'); this.qr=null },
+  unpay(r){ if(confirm('Hoàn tác khoản đã thu?')){ this.data.payments=this.data.payments.filter(p=>p.id!==r.p.id); this.save() } },
+  /* mã nội dung CK: duy nhất theo học sinh+lớp+tháng, để webhook ngân hàng khớp tự động sau này */
+  payCode(r){ return ('HP'+r.st.id+r.c.id+this.feeMonth.replace('-','')).toUpperCase() },
+  qrUrl(r){ const s=this.data.settings; return `https://img.vietqr.io/image/${s.bank}-${s.account}-compact2.png?amount=${r.c.fee}&addInfo=${encodeURIComponent(this.payCode(r))}&accountName=${encodeURIComponent(s.accountName)}` },
+
+  /* dashboard */
+  frequentAbsent(){
+    const from=iso(new Date(Date.now()-30*864e5)), mine=new Set(this.myClasses().map(c=>c.id));
+    const sess=new Set(this.data.sessions.filter(s=>s.date>=from&&mine.has(s.class_id)).map(s=>s.id)), n={};
+    this.data.attendance.forEach(a=>{ if(a.status==='absent'&&sess.has(a.session_id)) n[a.student_id]=(n[a.student_id]||0)+1 });
+    return Object.entries(n).filter(([,v])=>v>=2).map(([id,v])=>({st:this.by('students',id),n:v})).filter(r=>r.st).sort((a,b)=>b.n-a.n).slice(0,6);
+  }
+}}
+</script>
+</body>
+</html>
