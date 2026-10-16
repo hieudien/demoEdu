@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+/* Theme A · Clean SaaS. Màu "indigo" của Tailwind được map sang teal để mọi class cũ tự theo thương hiệu. */
+@theme {
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --color-indigo-50: #ecfeff;
+  --color-indigo-100: #cffafe;
+  --color-indigo-200: #a5f3fc;
+  --color-indigo-500: #06b6d4;
+  --color-indigo-600: #0e7490;
+  --color-indigo-700: #0e7490;
+  --color-indigo-800: #155e75;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.5rem;
+  --shadow-sm: 0 1px 2px rgb(16 24 40 / 0.05);
+}
+
+body {
+  background: #f7f8fa;
+  color: #111827;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+h1.page-title { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.01em; }
+thead th { font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; font-size: 11px; padding: 0.5rem 0.75rem; }
+tbody td { padding: 0.5rem 0.75rem; }
+tbody tr:hover { background: #f9fafb; }
+input:focus, select:focus { outline: 2px solid #a5f3fc; outline-offset: 0; }
+
+.hdr { background: #fff; border-bottom: 1px solid #e5e7eb; }
+.seg { display: flex; border: 1px solid #e5e7eb; border-radius: 5px; overflow: hidden; font-size: 12px; }
+.seg button { padding: 0.25rem 0.65rem; }
+.seg button.on { background: #ecfeff; color: #0e7490; font-weight: 600; }
+.nav-item { color: #4b5563; border-radius: 6px; transition: background 0.15s; }
+.nav-item:hover { background: #f3f4f6; }
+.nav-item.on { background: #ecfeff; color: #0e7490; font-weight: 600; }
+
+@media print {
+  body * { visibility: hidden; }
+  #receipt, #receipt * { visibility: visible; }
+  #receipt { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none !important; }
+  .no-print { display: none !important; }
+}
+
+/* ===== Phản hồi khi rê chuột / bàn phím cho mọi phần tử bấm được ===== */
+button:not(:disabled), a[href], summary, select, [role="button"], [role="menuitem"], label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+button, a, summary, select, .hoverable { transition: background-color .15s, border-color .15s, color .15s, box-shadow .15s, transform .08s; }
+button:not(:disabled):active, a.bg-indigo-600:active { transform: translateY(1px); }
+:focus-visible { outline: 2px solid var(--color-indigo-500); outline-offset: 2px; border-radius: 4px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: 0; }
+
+/* nút đặc (nền màu): tối đi một bậc */
+:is(button, a).bg-indigo-600:not(:disabled):hover { background-color: var(--color-indigo-800); }
+:is(button, a).bg-emerald-600:not(:disabled):hover { background-color: #047857; }
+:is(button, a).bg-rose-600:not(:disabled):hover { background-color: #be123c; }
+:is(button, a).bg-violet-600:not(:disabled):hover { background-color: #6d28d9; }
+:is(button, a).bg-teal-600:not(:disabled):hover { background-color: #0f766e; }
+:is(button, a).bg-indigo-50:not(:disabled):hover { background-color: var(--color-indigo-100); }
+:is(button, a).bg-slate-800:not(:disabled):hover { background-color: #0f172a; }
+
+/* nút viền: nền nhạt + viền đậm hơn */
+:is(button, a).border:not([class*="bg-"]):not(:disabled):hover,
+:is(button, a).border.bg-white:not(:disabled):hover { background-color: #f1f5f9; border-color: #94a3b8; }
+
+/* nút/liên kết dạng chữ: gạch chân */
+:is(button, a).text-indigo-600:not(:disabled):hover, :is(button, a).text-emerald-600:not(:disabled):hover,
+:is(button, a).text-rose-600:not(:disabled):hover, :is(button, a).text-slate-500.underline:hover, :is(button, a).text-slate-400:not(:disabled):hover { text-decoration: underline; }
+:is(button, a).text-rose-600:not(:disabled):hover { color: #be123c; }
+
+/* thẻ, ô, hàng bấm được */
+.hoverable:not(:disabled):hover { border-color: var(--color-indigo-500); box-shadow: 0 2px 8px rgb(15 23 42 / 0.08); }
+.cal-cell:hover { background-color: var(--color-indigo-50) !important; }
+td.cursor-pointer:hover, th.cursor-pointer:hover { background-color: var(--color-indigo-50); }
+button.border-b-2:not(.border-indigo-600):hover { color: #0f172a; border-color: #cbd5e1; }
+details > summary:hover { color: var(--color-indigo-700); }
